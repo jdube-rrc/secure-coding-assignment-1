@@ -2,6 +2,10 @@ import * as readline from 'readline';
 import * as mysql from 'mysql';
 import { exec } from 'child_process';
 import * as http from 'http';
+import * as nodemailer from 'nodemailer'; // email validation package
+import * as dotenv from 'dotenv';
+
+dotenv.config(); // would load a theoretical .env file
 
 const dbConfig = {
     host: 'mydatabase.com',
@@ -24,17 +28,29 @@ function getUserInput(): Promise<string> {
     });
 }
 
-function sendEmail(to: string, subject: string, body: string) {
-    exec(`echo ${body} | mail -s "${subject}" ${to}`, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error sending email: ${error}`);
-        }
+async function sendEmail(to: string, subject: string, body: string): Promise<boolean> {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // basic regex generated with AI because regex is hard
+    if (!emailRegex.test(to)) {
+        console.error("Invalid email address");
+        return false;
+    }
+
+    const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST, // environment variable because we don't want to hardcode this
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS, // same idea for credentials
+        },
     });
-}
+
+        return true;
+    }
 
 function getData(): Promise<string> {
     return new Promise((resolve, reject) => {
-        http.get('http://insecure-api.com/get-data', (res) => {
+        http.get('https://insecure-api.com/get-data', (res) => { // use https instead of http
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => resolve(data));
