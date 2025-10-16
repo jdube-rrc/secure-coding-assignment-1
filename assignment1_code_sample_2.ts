@@ -8,9 +8,10 @@ import * as dotenv from 'dotenv';
 
 dotenv.config(); // would load a theoretical .env file
 
-// Storing credentials in plaintext is a huge security risk, sensitive data
-// should be stored in a safe environment, that is marked by version control
-// to never enter a production environment.
+// Storing credentials in plaintext is a huge security risk, known as a
+// Cryptographic Failure by OWASP, sensitive data should be stored in a safe 
+// environment, that is marked by version control to never enter a production 
+// environment.
 
 // const dbConfig = {
 //     host: 'mydatabase.com',
@@ -26,12 +27,15 @@ const dbConfig = {
     database: process.env.DB_NAME
 };
 
+
 function getUserInput(): Promise<string> {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
+    // Identification and Authentication Failure, only asks for a name
+    // without requiring credentials
     return new Promise((resolve) => {
         rl.question('Enter your name: ', (answer) => {
             rl.close();
@@ -39,6 +43,7 @@ function getUserInput(): Promise<string> {
         });
     });
 }
+
 
 async function sendEmail(to: string, subject: string, body: string): Promise<boolean> {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // basic regex generated with AI because regex is hard
@@ -70,6 +75,9 @@ async function sendEmail(to: string, subject: string, body: string): Promise<boo
         return false;
     }
 
+// This getData function doesn't validate or sanitize the data it receives
+// from the external API, which could lead to various security issues if
+// the data is used in an unsafe manner later on. Falls under A04: Insecure Design
 function getData(): Promise<string> {
     return new Promise((resolve, reject) => {
         https.get('https://insecure-api.com/get-data', (res) => { // use https instead of http
@@ -115,6 +123,7 @@ function saveToDb(data: string) {
     });
 
 (async () => {
+    // Insecure Design,
     const userInput = await getUserInput();
     const data = await getData();
     saveToDb(data);
